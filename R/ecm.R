@@ -1,0 +1,94 @@
+#'Build an error correction model
+#'
+#'Builds an lm object that represents an error correction model (ECM) by automatically differencing and
+#'lagging predictor variables according to ECM methodology.
+#'@param y The target variable
+#'@param xeq The variables to be used in the equilibrium term of the error correction model
+#'@param xtr The variables to be used in the transient term of the error correction model
+#'@return an lm object representing an error correction model
+#'@details
+#'The general format of an ECM is \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (x1_{t-1} +...+ x_{i,t-1})).}
+#'The ecm function here modifies the equation to the following: \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma y_{t-1} + \gamma_{1}x_{1,t-1} +...+ \gamma_{i}x_{i,t-1},}
+#'so it can be modeled as a simpler ordinary least squares (OLS) function using R's lm function.
+#'
+#'Notice that an ECM models the change in the target variable (y). This means that the predictors will be lagged and differenced,
+#'and the model will be built on one observation less than what the user inputs for y, xeq, and xtr. If these arguments contain vectors with too few observations (eg. one single observation),
+#'the function will not work.
+#'
+#'ECM models are used for time series data. This means the user may need to consider stationarity and/or cointegration before using the model.
+#'@seealso \code{lm}
+#'@examples
+#'#Use ecm to predict Fed Funds Rate based on Unemployment Rate, Inflation, and GDP Growth
+#'data(FedData)
+#'
+#'#Use 2015-12-01 and earlier data to build models
+#'trn <- FedData[FedData$date<='2015-12-01',]
+#'
+#'#Assume all predictors are needed in the equilibrium and transient terms of ecm
+#'xeq <- xtr <- trn[c('UnemploymentRate', 'Inflation', 'GDPgrowth')]
+#'model1 <- ecm(trn$FedFundsRate, xeq, xtr)
+#'
+#'#Assume Unemployment Rate is in the equilibrium term, 
+#'#Inflation and GDPgrowth have only transient impacts
+#'xeq <- trn['UnemploymentRate']
+#'xtr <- trn[c('Inflation', 'GDPgrowth')]
+#'model2 <- ecm(trn$FedFundsRate, xeq, xtr)
+#'
+#'@export
+#'@importFrom stats lm
+ecm <- function (y, xeq, xtr) {
+  if(missing(xeq)){
+    if(class(xtr)!='data.frame'){
+      xtrnames <- deparse(substitute(xtr))
+      xtrnames <- substr(xtrnames, regexpr("\\$", xtrnames)+1, nchar(xtrnames))
+    } else{
+      xtrnames <- names(xtr)
+    }
+  } else{
+    xeqnames <- names(xeq)
+    if(class(xeq)!='data.frame'){
+      xeqnames <- deparse(substitute(xeq))
+      xeqnames <- substr(xeqnames, regexpr("\\$", xeqnames)+1, nchar(xeqnames))
+    }
+    if(missing(xtr)){
+      xtrnames <- xeqnames
+      xtr <- xeq
+    } else{
+      xtrnames <- names(xtr)
+    }
+
+    xeqnames <- paste0(xeqnames, 'Lag1')
+    xeq <- as.data.frame(xeq)
+    ifelse(ncol(xeq)>1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq)-1),]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq)-1),])))
+  }
+
+  xtrnames <- paste0('delta', xtrnames)
+  xtr <- as.data.frame(xtr)
+  xtr <- data.frame(apply(xtr, 2, diff, 1))
+
+  dy <- diff(y, 1)
+
+  if(!missing(xeq)){
+    yLag1 <- y[1:(length(y)-1)]
+    x <- cbind(xtr, xeq[complete.cases(xeq),])
+    x <- cbind(x, yLag1)
+    names(x) <- c(xtrnames, xeqnames, 'yLag1')
+  } else{
+    x <- xtr
+    names(x) <- xtrnames
+  }
+
+  ecm <- lm(dy~., data=x)
+  return(ecm)
+}
+
+
+
+
+
+
+
+
+
+
+
