@@ -6,6 +6,7 @@
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
+#'@param criterion Whether AIC (default) or BIC should be used to select variables 
 #'@return an lm object representing an error correction model using backwards selection
 #'@seealso \code{lm}
 #'@examples
@@ -24,44 +25,51 @@
 #'
 #'@export
 #'@importFrom stats lm complete.cases step
-ecmback <- function (y, xeq, xtr) {
-  if(missing(xeq)){
+ecmback <- function (y, xeq, xtr, criterion="AIC") 
+{
+  if (missing(xeq)) {
     xtrnames <- names(xtr)
-  } else{
+  }
+  else {
     xeqnames <- names(xeq)
-    if(class(xeq)!='data.frame'){
+    if (class(xeq) != "data.frame") {
       xeqnames <- deparse(substitute(xeq))
-      xeqnames <- substr(xeqnames, regexpr("\\$", xeqnames)+1, nchar(xeqnames))
+      xeqnames <- substr(xeqnames, regexpr("\\$", xeqnames) + 
+                           1, nchar(xeqnames))
     }
-    if(missing(xtr)){
+    if (missing(xtr)) {
       xtrnames <- xeqnames
       xtr <- xeq
-    } else{
+    }
+    else {
       xtrnames <- names(xtr)
     }
-
-    xeqnames <- paste0(xeqnames, 'Lag1')
+    xeqnames <- paste0(xeqnames, "Lag1")
     xeq <- as.data.frame(xeq)
-    ifelse(ncol(xeq)>1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq)-1),]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq)-1),])))
+    ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), 
+                                       xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, 
+                                                                                      xeq[1:(nrow(xeq) - 1), ])))
   }
-
-  xtrnames <- paste0('delta', xtrnames)
+  xtrnames <- paste0("delta", xtrnames)
   xtr <- as.data.frame(xtr)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
-
   dy <- diff(y, 1)
-
-  if(!missing(xeq)){
-    yLag1 <- y[1:(length(y)-1)]
-    x <- cbind(xtr, xeq[complete.cases(xeq),])
+  if (!missing(xeq)) {
+    yLag1 <- y[1:(length(y) - 1)]
+    x <- cbind(xtr, xeq[complete.cases(xeq), ])
     x <- cbind(x, yLag1)
-    names(x) <- c(xtrnames, xeqnames, 'yLag1')
-  } else{
+    names(x) <- c(xtrnames, xeqnames, "yLag1")
+  }
+  else {
     x <- xtr
     names(x) <- xtrnames
   }
-
-  full <- lm(dy~., data=x)
-  ecm <- step(full, data=x, direction="backward")
+  full <- lm(dy ~ ., data = x)
+  if(criterion=='AIC'){
+    k=2
+  } else if(criterion=='BIC'){
+    k=log(nrow(x))
+  }
+  ecm <- step(full, data = x, direction = "backward", k=k, trace=0)
   return(ecm)
 }

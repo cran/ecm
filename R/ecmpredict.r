@@ -25,43 +25,44 @@
 #'@importFrom stats predict
 ecmpredict <- function(ecm, newdata, init){
   form <- names(ecm$coefficients)
-
+  
   xtrnames <- form[grep("^delta", form)]
   xtrnames <- substr(xtrnames, 6, max(nchar(xtrnames)))
-
+  
   xtr <- newdata[which(names(newdata) %in% xtrnames)]
   xtr <- data.frame(apply(xtr, 2, diff, 1))
-  xtrnames <- paste0('delta', xtrnames)
-
+  names(xtr) <- paste0('delta', names(xtr))
+  xtrnames <- names(xtr)
+  
   xeqnames <- form[grep("^(?!delta).*", form, perl = T)]
   xeqnames <- xeqnames[-c(1,length(xeqnames))]
   xeqnames <- substr(xeqnames, 1, unlist(lapply(gregexpr('Lag', xeqnames), function(x) x[length(x)]))-1)
-
+  
   xeq <- newdata[which(names(newdata) %in% xeqnames)]
+  names(xeq) <- paste0(names(xeq), 'Lag1')
+  xeqnames <- names(xeq)
   if(ncol(xeq)>1){
     xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq)-1),])
   } else{
     xeq <- data.frame(c(NA, xeq[1:(nrow(xeq)-1),]))
   }
-  xeqnames <- paste0(xeqnames, 'Lag1')
-
+  
   if(sum(is.na(xeq))/nrow(xeq)==1){
     x <- xtr
     x$yLag1 <- init
-    names(x) <- c(xtrnames, 'yLag1')
   } else{
     x <- cbind(xtr, xeq[complete.cases(xeq),])
     x$yLag1 <- init
-    names(x) <- c(xtrnames, xeqnames, 'yLag1')
   }
-
+  names(x) <- c(xtrnames, xeqnames, 'yLag1')
+  
   ecmpred <- predict(ecm, x[1,])
   for(i in 2:nrow(x)){
     x$yLag1[i] <- x$yLag1[i-1]+ecmpred
     ecmpred <- predict(ecm, x[i,])
   }
   ecmpred <- predict(ecm, x)
-
+  
   ecmpred <- cumsum(c(init, ecmpred))
   return(ecmpred)
 }

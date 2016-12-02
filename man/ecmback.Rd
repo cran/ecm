@@ -4,7 +4,7 @@
 \alias{ecmback}
 \title{Backwards selection to build an error correction model}
 \usage{
-ecmback(y, xeq, xtr)
+ecmback(y, xeq, xtr, criterion = "AIC")
 }
 \arguments{
 \item{y}{The target variable}
@@ -12,6 +12,8 @@ ecmback(y, xeq, xtr)
 \item{xeq}{The variables to be used in the equilibrium term of the error correction model}
 
 \item{xtr}{The variables to be used in the transient term of the error correction model}
+
+\item{criterion}{Whether AIC (default) or BIC should be used to select variables}
 }
 \value{
 an lm object representing an error correction model using backwards selection
