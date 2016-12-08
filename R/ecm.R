@@ -18,21 +18,22 @@
 #'ECM models are used for time series data. This means the user may need to consider stationarity and/or cointegration before using the model.
 #'@seealso \code{lm}
 #'@examples
-#'#Use ecm to predict Fed Funds Rate based on Unemployment Rate, Inflation, and GDP Growth
-#'data(FedData)
+#'#Use ecm to predict Wilshire 5000 index based on corporate profits, 
+#'#Federal Reserve funds rate, and unemployment rate
+#'data(Wilshire)
 #'
-#'#Use 2015-12-01 and earlier data to build models
-#'trn <- FedData[FedData$date<='2015-12-01',]
+#'#Use 2014-12-01 and earlier data to build models
+#'trn <- Wilshire[Wilshire$date<='2014-12-01',]
 #'
 #'#Assume all predictors are needed in the equilibrium and transient terms of ecm
-#'xeq <- xtr <- trn[c('UnemploymentRate', 'Inflation', 'GDPgrowth')]
-#'model1 <- ecm(trn$FedFundsRate, xeq, xtr)
+#'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
+#'model1 <- ecm(trn$Wilshire5000, xeq, xtr)
 #'
-#'#Assume Unemployment Rate is in the equilibrium term, 
-#'#Inflation and GDPgrowth have only transient impacts
-#'xeq <- trn['UnemploymentRate']
-#'xtr <- trn[c('Inflation', 'GDPgrowth')]
-#'model2 <- ecm(trn$FedFundsRate, xeq, xtr)
+#'#Assume CorpProfits and FedFundsRate are in the equilibrium term, 
+#'#UnempRate has only transient impacts
+#'xeq <- trn[c('CorpProfits', 'FedFundsRate')]
+#'xtr <- trn['UnempRate']
+#'model2 <- ecm(trn$Wilshire5000, xeq, xtr)
 #'
 #'@export
 #'@importFrom stats lm

@@ -20,22 +20,23 @@ an lm object representing an error correction model using backwards selection
 }
 \description{
 Much like the ecm function, this builds an error correction model.
-However, it uses backwards selection to select the optimal predictors based on lowest AIC, rather than using all predictors.
+However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, rather than using all predictors.
 ecmback has the same parameters and output as ecm.
 }
 \examples{
-#Use ecm to predict Fed Funds Rate based on Unemployment Rate, Inflation, and GDP Growth
-data(FedData)
+#Use ecm to predict Wilshire 5000 index based on corporate profits, 
+#Federal Reserve funds rate, and unemployment rate
+data(Wilshire)
 
-#Use 2015-12-01 and earlier data to build models
-trn <- FedData[FedData$date<='2015-12-01',]
+#Use 2014-12-01 and earlier data to build models
+trn <- Wilshire[Wilshire$date<='2014-12-01',]
 
 #Use backwards selection to choose which predictors are needed 
-xeq <- xtr <- trn[c('UnemploymentRate', 'Inflation', 'GDPgrowth')]
-modelback <- ecmback(trn$FedFundsRate, xeq, xtr)
+xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
+modelback <- ecmback(trn$Wilshire5000, xeq, xtr)
 print(modelback)
-#Backwards selection chose Unemployment Rate and Inflation in the transient term. 
-#Inflation and GDP Growth in the equilibrium term.
+#Backwards selection chose CorpProfits in the equilibrium term, 
+#CorpProfits and UnempRate in the transient term.
 
 }
 \seealso{

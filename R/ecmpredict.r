@@ -8,18 +8,18 @@
 #'@details 
 #'Since error correction models only model the change in the target variable, an initial value must be specified.
 #'@examples
-#'data(FedData)
+#'data(Wilshire)
 #'
 #'#Rebuilding model1 from ecm example
-#'trn <- FedData[FedData$date<='2015-12-01',]
-#'xeq <- xtr <- trn[c('UnemploymentRate', 'Inflation', 'GDPgrowth')]
-#'model1 <- ecm(trn$FedFundsRate, xeq, xtr)
+#'trn <- Wilshire[Wilshire$date<='2014-12-01',]
+#'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
+#'model1 <- ecm(trn$Wilshire5000, xeq, xtr)
 #'
-#'#Use 2016-01-01 and onwards data as test data to predict
-#'tst <- FedData[FedData$date>='2016-01-01',]
+#'#Use 2014-12-01 and onwards data as test data to predict
+#'tst <- Wilshire[Wilshire$date>='2014-12-01',]
 #'
 #'#predict on tst using model1 and initial FedFundsRate
-#'tst$model1Pred <- ecmpredict(model1, tst, tst$FedFundsRate[1])
+#'tst$model1Pred <- ecmpredict(model1, tst, tst$Wilshire5000[1])
 #'
 #'@export
 #'@importFrom stats predict

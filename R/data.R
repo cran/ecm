@@ -1,14 +1,14 @@
-#'FRED data on Federal Reserve rates and the economy
+#'FRED data on the Wilshire 5000 index and other economic factors
 #'
-#'A dataset containing the monthly federal funds rate, unemployment rate, and inflation.
-#'@usage data(FedData)
-#'@format A data frame with 120 rows and 5 variables:
+#'A dataset containing quarterly performance of the Wilshire 5000 index, corporate profits, Federal Reserve funds rate, and the unemployment rate.
+#'@usage data(Wilshire)
+#'@format A data frame with 182 rows and 6 variables:
 #'\describe{
 #' \item{date}{monthly date}
-#' \item{FedFundsRate}{federal funds rate, in percent}
-#' \item{UnemploymentRate}{monthly US unemployment rate, in percent}
-#' \item{Inflation}{monthly US inflation rate, in percent}
-#' \item{GDPgrowth}{quarterly GDP growth, in percent - data have been interpolated and extrapolated to be monthly}
+#' \item{Wilshire5000}{quarterly Wilshire 5000 index, in value}
+#' \item{CorpProfits}{quarterly corporate profits, in value}
+#' \item{FedFundsRate}{quarterly federal funds rate, in percent}
+#' \item{UnempRate}{quarterly unemployment rate, in percent}
 #'}
 #'@source \url{https://fred.stlouisfed.org/}
-"FedData"
+"Wilshire"
