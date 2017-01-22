@@ -1,6 +1,7 @@
-4d203068fdca99784dce910da17a5f5e *DESCRIPTION
-25bc4bdb7d124eb6477659a831c1f942 *NAMESPACE
+8311077d424e0a9a2493524cb9113a03 *DESCRIPTION
+017f28d18ae1f0ad297ffd632f13d940 *NAMESPACE
 171ad9cf59c305ec1d36cf0ca3fc5ac2 *R/data.R
+e793809616781f8e7ea28ff2980dbfba *R/durbinH.r
 957b788a460b9717df6825c3181477bf *R/ecm.R
 a2427a127ef708557efb1e3b074ce217 *R/ecmback.r
 ccdd1866137e90b1d21732d115d9da34 *R/ecmpredict.r
@@ -8,6 +9,7 @@ d84443d97dc212b73d044f7d868e13a5 *R/lagpad.r
 43d42ac261bf30f041480f8caeca8951 *README.md
 c2678cf777e8146e3ce85f5cad83b3c0 *data/Wilshire.RData
 bee93d6e944733899f6f5c186188b1aa *man/Wilshire.Rd
+440370bd73733ccdbcbb57107c84b72d *man/durbinH.Rd
 69eac87fbedbf5686445ff1ac5cd8980 *man/ecm.Rd
 5e7fd2a40e8473c680d733dbfd9ab75f *man/ecmback.Rd
 d568459793dd878474cf32fade827372 *man/ecmpredict.Rd
