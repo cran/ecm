@@ -4,10 +4,12 @@
 \alias{durbinH}
 \title{Calculate Durbin's h-statistic}
 \usage{
-durbinH(model)
+durbinH(model, ylag1var)
 }
 \arguments{
 \item{model}{The model being assessed}
+
+\item{ylag1var}{The variable in the model that represents the lag of the y-term}
 }
 \value{
 Numeric Durbin's h statistic
@@ -17,25 +19,20 @@ Calculates Durbin's h-statistic for autoregressive models.
 }
 \details{
 Using the Durbin-Watson (DW) test for autoregressive models (like ECM) is inappropriate because the 
-DW test itself tests for first order autocorrelation. Since an ECM model inherently uses the lag term
-of the target variable as one of the predictors, Durbin's h-statistic should be used to test for 
-autocorrelation. If Durbin's h-statistic is greater than 1.96, it is likely that autocorrelation exists.
+DW test itself tests for first order autocorrelation. This doesn't apply to an ECM model, for which the DW 
+test is still valid, but the durbinH function in included here in case an autoregressive model has been built.
+If Durbin's h-statistic is greater than 1.96, it is likely that autocorrelation exists.
 }
 \examples{
-#Use ecm to predict Wilshire 5000 index based on corporate profits, 
-#Federal Reserve funds rate, and unemployment rate
+#Build a simple AR1 model to predict performance of the Wilshire 5000 Index
 data(Wilshire)
+Wilshire$Wilshire5000Lag1 <- c(NA, Wilshire$Wilshire5000[1:(nrow(Wilshire)-1)])
+Wilshire <- Wilshire[complete.cases(Wilshire),]
+AR1model <- lm(Wilshire5000 ~ Wilshire5000Lag1, data=Wilshire)
 
-#Use 2014-12-01 and earlier data to build models
-trn <- Wilshire[Wilshire$date<='2014-12-01',]
-
-#Assume all predictors are needed in the equilibrium and transient terms of ecm
-xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-model1 <- ecm(trn$Wilshire5000, xeq, xtr)
-
-#Check Durbin's h-statistic on model1
-durbinH(model1)
-#The h-statistic is 4.55, which means there is likely autocorrelation in the data.
+#Check Durbin's h-statistic on AR1model
+durbinH(AR1model, "Wilshire5000Lag1")
+#The h-statistic is 4.23, which means there is likely autocorrelation in the data.
 
 }
 \seealso{
