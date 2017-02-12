@@ -28,21 +28,25 @@
 #'@importFrom stats lm complete.cases step
 ecmback <- function (y, xeq, xtr, criterion="AIC") 
 {
+  if(sum(grepl('^delta|Lag1$', names(xtr))) > 0 | sum(grepl('^delta', names(xeq))) > 0){
+    warning(
+      "You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. 
+      It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions."
+    )
+  }
+  
   if (missing(xeq)) {
     xtrnames <- names(xtr)
-  }
-  else {
+  } else {
     xeqnames <- names(xeq)
     if (class(xeq) != "data.frame") {
       xeqnames <- deparse(substitute(xeq))
-      xeqnames <- substr(xeqnames, regexpr("\\$", xeqnames) + 
-                           1, nchar(xeqnames))
+      xeqnames <- substr(xeqnames, regexpr("\\$", xeqnames) + 1, nchar(xeqnames))
     }
     if (missing(xtr)) {
       xtrnames <- xeqnames
       xtr <- xeq
-    }
-    else {
+    } else {
       xtrnames <- names(xtr)
     }
     xeqnames <- paste0(xeqnames, "Lag1")
@@ -59,8 +63,7 @@ ecmback <- function (y, xeq, xtr, criterion="AIC")
     x <- cbind(xtr, xeq[complete.cases(xeq), ])
     x <- cbind(x, yLag1)
     names(x) <- c(xtrnames, xeqnames, "yLag1")
-  }
-  else {
+  } else {
     x <- xtr
     names(x) <- xtrnames
   }
@@ -74,5 +77,12 @@ ecmback <- function (y, xeq, xtr, criterion="AIC")
   }
   
   ecm <- step(full, data = x, scope = list(upper = full, lower = null), direction = "backward", k=k, trace=0)
+  if(sum(grepl('delta', names(ecm$coefficients))) == 0){
+    warning(
+      "Backwards selection has opted to leave out all transient terms from the final model. 
+      This means you essentially have a first order autoregressive model, not an error correction model.
+      'ecmpredict' will not work with this model."
+    )
+  } 
   return(ecm)
 }
