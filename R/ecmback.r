@@ -19,22 +19,17 @@
 #'
 #'#Use backwards selection to choose which predictors are needed 
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-#'modelback <- ecmback(trn$Wilshire5000, xeq, xtr)
+#'modelback <- ecmback(trn$Wilshire5000, xeq, xtr, criterion = 'AIC')
 #'print(modelback)
 #'#Backwards selection chose CorpProfits in the equilibrium term, 
 #'#CorpProfits and UnempRate in the transient term.
 #'
 #'@export
 #'@importFrom stats lm complete.cases step
-ecmback <- function (y, xeq, xtr, criterion="AIC") 
-{
-  if(sum(grepl('^delta|Lag1$', names(xtr))) > 0 | sum(grepl('^delta', names(xeq))) > 0){
-    warning(
-      "You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. 
-      It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions."
-    )
+ecmback <- function (y, xeq, xtr, criterion = "AIC") {
+  if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
+    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
-  
   if (missing(xeq)) {
     xtrnames <- names(xtr)
   } else {
@@ -46,14 +41,14 @@ ecmback <- function (y, xeq, xtr, criterion="AIC")
     if (missing(xtr)) {
       xtrnames <- xeqnames
       xtr <- xeq
-    } else {
+    }
+    else {
       xtrnames <- names(xtr)
     }
     xeqnames <- paste0(xeqnames, "Lag1")
     xeq <- as.data.frame(xeq)
     ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ])))
   }
-  
   xtrnames <- paste0("delta", xtrnames)
   xtr <- as.data.frame(xtr)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
@@ -67,22 +62,35 @@ ecmback <- function (y, xeq, xtr, criterion="AIC")
     x <- xtr
     names(x) <- xtrnames
   }
-  
   full <- lm(dy ~ ., data = x)
   null <- lm(dy ~ yLag1, data = x)
-  if(criterion=='AIC'){
-    k=2
-  } else if(criterion=='BIC'){
-    k=log(nrow(x))
+  if(criterion == "AIC" | criterion == "BIC"){
+    if (criterion == "AIC") {
+      k = 2
+    } else if (criterion == "BIC") {
+      k = log(nrow(x))
+    }
+    ecm <- step(full, data = x, scope = list(upper = full, lower = null), 
+                direction = "backward", k = k, trace = 0)
+    if (sum(grepl("delta", names(ecm$coefficients))) == 0) {
+      warning("Backwards selection has opted to leave out all transient terms from the final model. This means you essentially have a first order differenced autoregressive model, not an error correction model.")
+    }
+  } else if (criterion == "adjustedR2"){
+    fullAdjR2 <- partialAdjR2 <- summary(full)$adj.r.sq
+    while (partialAdjR2 >= fullAdjR2){
+      todrop <- which.max(summary(full)$coef[-1,4])
+      newx <- x[which(!names(x) %in% names(todrop))]
+      partial <- lm(dy ~ ., data = newx)
+      partialAdjR2 <- summary(partial)$adj.r.sq
+      if (partialAdjR2 >= fullAdjR2){
+        x <- newx
+        ecm <- partial
+        full <- lm(dy ~ ., data = x)
+      } else {
+        ecm <- lm(dy ~ ., data = x)
+      }
+    }
   }
   
-  ecm <- step(full, data = x, scope = list(upper = full, lower = null), direction = "backward", k=k, trace=0)
-  if(sum(grepl('delta', names(ecm$coefficients))) == 0){
-    warning(
-      "Backwards selection has opted to leave out all transient terms from the final model. 
-      This means you essentially have a first order autoregressive model, not an error correction model.
-      'ecmpredict' will not work with this model."
-    )
-  } 
   return(ecm)
 }
