@@ -1,12 +1,12 @@
 #'Backwards selection to build an error correction model
 #'
 #'Much like the ecm function, this builds an error correction model.
-#'However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, rather than using all predictors.
+#'However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, or highest adjusted R-squared, rather than using all predictors.
 #'ecmback has the same parameters and output as ecm.
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
-#'@param criterion Whether AIC (default) or BIC should be used to select variables 
+#'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables 
 #'@return an lm object representing an error correction model using backwards selection
 #'@seealso \code{lm}
 #'@examples

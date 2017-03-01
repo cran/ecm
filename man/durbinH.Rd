@@ -18,9 +18,9 @@ Numeric Durbin's h statistic
 Calculates Durbin's h-statistic for autoregressive models.
 }
 \details{
-Using the Durbin-Watson (DW) test for autoregressive models (like ECM) is inappropriate because the 
-DW test itself tests for first order autocorrelation. This doesn't apply to an ECM model, for which the DW 
-test is still valid, but the durbinH function in included here in case an autoregressive model has been built.
+Using the Durbin-Watson (DW) test for autoregressive models is inappropriate because the DW test itself 
+tests for first order autocorrelation. This doesn't apply to an ECM model, for which the DW test is 
+still valid, but the durbinH function in included here in case an autoregressive model has been built.
 If Durbin's h-statistic is greater than 1.96, it is likely that autocorrelation exists.
 }
 \examples{

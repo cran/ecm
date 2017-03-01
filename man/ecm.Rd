@@ -23,7 +23,7 @@ lagging predictor variables according to ECM methodology.
 \details{
 The general format of an ECM is \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (\alpha_{1}x_{1,t-1} +...+ \alpha_{i}x_{i,t-1})).}
 The ecm function here modifies the equation to the following: \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma y_{t-1} + \gamma_{1}x_{1,t-1} +...+ \gamma_{i}x_{i,t-1},}
-\deqn{where \gamma_{i} = \gamma \alpha_{i},} 
+\deqn{where \gamma_{i} = -\gamma \alpha_{i},} 
 so it can be modeled as a simpler ordinary least squares (OLS) function using R's lm function.
 
 Notice that an ECM models the change in the target variable (y). This means that the predictors will be lagged and differenced,

@@ -53,7 +53,7 @@ ecmpredict <- function (ecm, newdata, init) {
   }   
   
   if (exists('xeq') & exists('xtr')) {
-    if ((is.na(xeq))/nrow(xeq) == 1) {
+    if (sum(is.na(xeq))/nrow(xeq) == 1) {
       x <- xtr
     } else {
       x <- cbind(xtr, xeq[complete.cases(xeq), ])
@@ -65,7 +65,7 @@ ecmpredict <- function (ecm, newdata, init) {
     x$yLag1 <- init
     names(x) <- c(xtrnames, "yLag1")
   } else if (exists('xeq') & !exists('xtr')) {
-    x <- xeq[complete.cases(xeq),]
+    x <- as.data.frame(xeq[complete.cases(xeq),])
     x$yLag1 <- init
     names(x) <- c(xeqnames, "yLag1")
   }

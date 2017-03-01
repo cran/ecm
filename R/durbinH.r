@@ -5,9 +5,9 @@
 #'@param ylag1var The variable in the model that represents the lag of the y-term
 #'@return Numeric Durbin's h statistic 
 #'@details
-#'Using the Durbin-Watson (DW) test for autoregressive models (like ECM) is inappropriate because the 
-#'DW test itself tests for first order autocorrelation. This doesn't apply to an ECM model, for which the DW 
-#'test is still valid, but the durbinH function in included here in case an autoregressive model has been built.
+#'Using the Durbin-Watson (DW) test for autoregressive models is inappropriate because the DW test itself 
+#'tests for first order autocorrelation. This doesn't apply to an ECM model, for which the DW test is 
+#'still valid, but the durbinH function in included here in case an autoregressive model has been built.
 #'If Durbin's h-statistic is greater than 1.96, it is likely that autocorrelation exists.
 #'
 #'@seealso \code{lm}
