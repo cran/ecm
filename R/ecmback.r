@@ -41,8 +41,7 @@ ecmback <- function (y, xeq, xtr, criterion = "AIC") {
     if (missing(xtr)) {
       xtrnames <- xeqnames
       xtr <- xeq
-    }
-    else {
+    } else {
       xtrnames <- names(xtr)
     }
     xeqnames <- paste0(xeqnames, "Lag1")
@@ -64,25 +63,25 @@ ecmback <- function (y, xeq, xtr, criterion = "AIC") {
   }
   full <- lm(dy ~ ., data = x)
   null <- lm(dy ~ yLag1, data = x)
-  if(criterion == "AIC" | criterion == "BIC"){
+  if (criterion == "AIC" | criterion == "BIC") {
     if (criterion == "AIC") {
       k = 2
     } else if (criterion == "BIC") {
       k = log(nrow(x))
     }
-    ecm <- step(full, data = x, scope = list(upper = full, lower = null), 
-                direction = "backward", k = k, trace = 0)
+    ecm <- step(full, data = x, scope = list(upper = full, lower = null), direction = "backward", k = k, trace = 0)
     if (sum(grepl("delta", names(ecm$coefficients))) == 0) {
       warning("Backwards selection has opted to leave out all transient terms from the final model. This means you essentially have a first order differenced autoregressive model, not an error correction model.")
     }
-  } else if (criterion == "adjustedR2"){
+  } else if (criterion == "adjustedR2") {
     fullAdjR2 <- partialAdjR2 <- summary(full)$adj.r.sq
-    while (partialAdjR2 >= fullAdjR2){
-      todrop <- which.max(summary(full)$coef[-1,4])
+    while (partialAdjR2 >= fullAdjR2) {
+      fullAdjR2 <- summary(full)$adj.r.sq
+      todrop <- which.max(summary(full)$coef[-1, 4])
       newx <- x[which(!names(x) %in% names(todrop))]
       partial <- lm(dy ~ ., data = newx)
       partialAdjR2 <- summary(partial)$adj.r.sq
-      if (partialAdjR2 >= fullAdjR2){
+      if (partialAdjR2 >= fullAdjR2) {
         x <- newx
         ecm <- partial
         full <- lm(dy ~ ., data = x)
@@ -91,6 +90,5 @@ ecmback <- function (y, xeq, xtr, criterion = "AIC") {
       }
     }
   }
-  
   return(ecm)
 }
