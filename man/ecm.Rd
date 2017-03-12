@@ -30,6 +30,8 @@ Notice that an ECM models the change in the target variable (y). This means that
 and the model will be built on one observation less than what the user inputs for y, xeq, and xtr. If these arguments contain vectors with too few observations (eg. one single observation),
 the function will not work.
 
+When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+
 ECM models are used for time series data. This means the user may need to consider stationarity and/or cointegration before using the model.
 }
 \examples{

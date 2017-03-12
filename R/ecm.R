@@ -16,6 +16,8 @@
 #'and the model will be built on one observation less than what the user inputs for y, xeq, and xtr. If these arguments contain vectors with too few observations (eg. one single observation),
 #'the function will not work.
 #'
+#'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+#'
 #'ECM models are used for time series data. This means the user may need to consider stationarity and/or cointegration before using the model.
 #'@seealso \code{lm}
 #'@examples
@@ -43,42 +45,25 @@ ecm <- function (y, xeq, xtr) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
   
-  if (missing(xeq)) {
-    if (class(xtr) != "data.frame") {
-      xtrnames <- deparse(substitute(xtr))
-      xtrnames <- substr(xtrnames, regexpr("\\$", xtrnames) + 1, nchar(xtrnames))
-    } else {
-      xtrnames <- names(xtr)
-    }
-  } else {
-    xeqnames <- names(xeq)
-    if (class(xeq) != "data.frame") {
-      xeqnames <- deparse(substitute(xeq))
-      xeqnames <- substr(xeqnames, regexpr("\\$", xeqnames) + 1, nchar(xeqnames))
-    }
-    if (missing(xtr)) {
-      xtrnames <- xeqnames
-      xtr <- xeq
-    } else {
-      xtrnames <- names(xtr)
-    }
-    xeqnames <- paste0(xeqnames, "Lag1")
-    xeq <- as.data.frame(xeq)
-    ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ])))
+  if(class(xtr) != "data.frame" | class(xeq) != "data.frame") {
+    stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
   }
+  
+  xeqnames <- names(xeq)
+  xeqnames <- paste0(xeqnames, "Lag1")
+  ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ])))
+
+  xtrnames <- names(xtr)
   xtrnames <- paste0("delta", xtrnames)
-  xtr <- as.data.frame(xtr)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
+  
   dy <- diff(y, 1)
-  if (!missing(xeq)) {
-    yLag1 <- y[1:(length(y) - 1)]
-    x <- cbind(xtr, xeq[complete.cases(xeq), ])
-    x <- cbind(x, yLag1)
-    names(x) <- c(xtrnames, xeqnames, "yLag1")
-  } else {
-    x <- xtr
-    names(x) <- xtrnames
-  }
+  
+  yLag1 <- y[1:(length(y) - 1)]
+  x <- cbind(xtr, xeq[complete.cases(xeq), ])
+  x <- cbind(x, yLag1)
+  names(x) <- c(xtrnames, xeqnames, "yLag1")
+  
   ecm <- lm(dy ~ ., data = x)
   return(ecm)
 }

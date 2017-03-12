@@ -8,6 +8,8 @@
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables 
 #'@return an lm object representing an error correction model using backwards selection
+#'@details
+#'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
 #'@seealso \code{lm}
 #'@examples
 #'#Use ecm to predict Wilshire 5000 index based on corporate profits, 
@@ -27,40 +29,25 @@
 #'@export
 #'@importFrom stats lm complete.cases step
 ecmback <- function (y, xeq, xtr, criterion = "AIC") {
-  if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
+  if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
-  if (missing(xeq)) {
-    xtrnames <- names(xtr)
-  } else {
-    xeqnames <- names(xeq)
-    if (class(xeq) != "data.frame") {
-      xeqnames <- deparse(substitute(xeq))
-      xeqnames <- substr(xeqnames, regexpr("\\$", xeqnames) + 1, nchar(xeqnames))
-    }
-    if (missing(xtr)) {
-      xtrnames <- xeqnames
-      xtr <- xeq
-    } else {
-      xtrnames <- names(xtr)
-    }
-    xeqnames <- paste0(xeqnames, "Lag1")
-    xeq <- as.data.frame(xeq)
-    ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ])))
-  }
+
+  xeqnames <- names(xeq)
+  xeqnames <- paste0(xeqnames, "Lag1")
+  xeq <- as.data.frame(xeq)
+  ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ])))
+  
+  xtrnames <- names(xtr)
   xtrnames <- paste0("delta", xtrnames)
   xtr <- as.data.frame(xtr)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
   dy <- diff(y, 1)
-  if (!missing(xeq)) {
-    yLag1 <- y[1:(length(y) - 1)]
-    x <- cbind(xtr, xeq[complete.cases(xeq), ])
-    x <- cbind(x, yLag1)
-    names(x) <- c(xtrnames, xeqnames, "yLag1")
-  } else {
-    x <- xtr
-    names(x) <- xtrnames
-  }
+  
+  yLag1 <- y[1:(length(y) - 1)]
+  x <- cbind(xtr, xeq[complete.cases(xeq), ])
+  x <- cbind(x, yLag1)
+  names(x) <- c(xtrnames, xeqnames, "yLag1")
   full <- lm(dy ~ ., data = x)
   null <- lm(dy ~ yLag1, data = x)
   if (criterion == "AIC" | criterion == "BIC") {
@@ -70,9 +57,6 @@ ecmback <- function (y, xeq, xtr, criterion = "AIC") {
       k = log(nrow(x))
     }
     ecm <- step(full, data = x, scope = list(upper = full, lower = null), direction = "backward", k = k, trace = 0)
-    if (sum(grepl("delta", names(ecm$coefficients))) == 0) {
-      warning("Backwards selection has opted to leave out all transient terms from the final model. This means you essentially have a first order differenced autoregressive model, not an error correction model.")
-    }
   } else if (criterion == "adjustedR2") {
     fullAdjR2 <- partialAdjR2 <- summary(full)$adj.r.sq
     while (partialAdjR2 >= fullAdjR2) {
@@ -89,6 +73,11 @@ ecmback <- function (y, xeq, xtr, criterion = "AIC") {
         ecm <- lm(dy ~ ., data = x)
       }
     }
+  }
+  if (sum(grepl("^delta", names(ecm$coefficients))) == 0) {
+    warning("Backwards selection has opted to leave out all transient terms from the final model. This means you essentially have a first order differenced autoregressive model, not an error correction model.")
+  } else if (sum(grepl("Lag1$", names(ecm$coefficients))) == 0) {
+    warning("Backwards selection has opted to leave out all equilibrium terms from the final model. This means you essentially have a first order differenced autoregressive model with the x terms also differenced, not an error correction model.")
   }
   return(ecm)
 }

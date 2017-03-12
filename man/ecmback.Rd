@@ -23,6 +23,9 @@ Much like the ecm function, this builds an error correction model.
 However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, or highest adjusted R-squared, rather than using all predictors.
 ecmback has the same parameters and output as ecm.
 }
+\details{
+When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+}
 \examples{
 #Use ecm to predict Wilshire 5000 index based on corporate profits, 
 #Federal Reserve funds rate, and unemployment rate
