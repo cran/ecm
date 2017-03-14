@@ -38,4 +38,3 @@ durbinH(AR1model, "Wilshire5000Lag1")
 \seealso{
 \code{lm}
 }
-

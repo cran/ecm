@@ -22,4 +22,3 @@ data(Wilshire)
 A dataset containing quarterly performance of the Wilshire 5000 index, corporate profits, Federal Reserve funds rate, and the unemployment rate.
 }
 \keyword{datasets}
-

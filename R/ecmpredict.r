@@ -1,12 +1,12 @@
 #'Predict using an ecm object
 #'
 #'Takes an ecm object and uses it to predict based on new data.
-#'@param ecm ecm object used to make predictions
+#'@param model ecm object used to make predictions
 #'@param newdata Data frame to on which to predict
 #'@param init Initial value for prediction
 #'@return Numeric predictions on new data based ecm object
 #'@details 
-#'Since error correction models only model the change in the target variable, an initial value must be specified.
+#'Since error correction models only model the change in the target variable, an initial value must be specified. Additionally, the 'newdata' parameter should have at least 3 rows of data.
 #'@examples
 #'data(Wilshire)
 #'
@@ -23,9 +23,12 @@
 #'
 #'@export
 #'@importFrom stats predict
-ecmpredict <- function (ecm, newdata, init) {
-  if (sum(grepl('^delta', names(ecm$coefficients))) >= 1) {
-    form <- names(ecm$coefficients)
+ecmpredict <- function (model, newdata, init) {
+  if(nrow(newdata) < 3){
+    stop("Your input for 'newdata' has less that 3 rows. This insufficient to make proper ECM predictions.")
+  }
+  if (sum(grepl('^delta', names(model$coefficients))) >= 1) {
+    form <- names(model$coefficients)
     xtrnames <- form[grep("^delta", form)]
     xtrnames <- substr(xtrnames, 6, max(nchar(xtrnames)))
     xtr <- newdata[which(names(newdata) %in% xtrnames)]
@@ -34,8 +37,8 @@ ecmpredict <- function (ecm, newdata, init) {
     xtrnames <- names(xtr)
   }
   
-  if (sum(grepl('Lag1$', names(ecm$coefficients))) > 1) {
-    form <- names(ecm$coefficients)
+  if (sum(grepl('Lag1$', names(model$coefficients))) > 1) {
+    form <- names(model$coefficients)
     xeqnames <- form[grep("^(?!delta).*", form, perl = T)]
     xeqnames <- xeqnames[-c(1, length(xeqnames))]
     xeqnames <- substr(xeqnames, 1, unlist(lapply(gregexpr("Lag", xeqnames), function(x) x[length(x)])) - 1)
@@ -53,11 +56,7 @@ ecmpredict <- function (ecm, newdata, init) {
   }   
   
   if (exists('xeq') & exists('xtr')) {
-    if (sum(is.na(xeq))/nrow(xeq) == 1) {
-      x <- xtr
-    } else {
-      x <- cbind(xtr, xeq[complete.cases(xeq), ])
-    }
+    x <- cbind(xtr, xeq[complete.cases(xeq), ])
     x$yLag1 <- init
     names(x) <- c(xtrnames, xeqnames, "yLag1")
   } else if (!exists('xeq') & exists('xtr')) {
@@ -70,13 +69,13 @@ ecmpredict <- function (ecm, newdata, init) {
     names(x) <- c(xeqnames, "yLag1")
   }
   
-  ecmpred <- predict(ecm, x[1, ])
+  modelpred <- predict(model, x[1, ])
   for (i in 2:nrow(x)) {
-    x$yLag1[i] <- x$yLag1[i - 1] + ecmpred
-    ecmpred <- predict(ecm, x[i, ])
+    x$yLag1[i] <- x$yLag1[i - 1] + modelpred
+    modelpred <- predict(model, x[i, ])
   }
-  ecmpred <- predict(ecm, x)
-  ecmpred <- cumsum(c(init, ecmpred))
-  return(ecmpred)
+  modelpred <- predict(model, x)
+  modelpred <- cumsum(c(init, modelpred))
+  return(modelpred)
 }
 

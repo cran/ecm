@@ -6,7 +6,7 @@
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
-#'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables 
+#'@param criterion Whether AIC (default), BIC, adjustedR2, or rmse should be used to select variables 
 #'@return an lm object representing an error correction model using backwards selection
 #'@details
 #'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
@@ -66,6 +66,22 @@ ecmback <- function (y, xeq, xtr, criterion = "AIC") {
       partial <- lm(dy ~ ., data = newx)
       partialAdjR2 <- summary(partial)$adj.r.sq
       if (partialAdjR2 >= fullAdjR2) {
+        x <- newx
+        ecm <- partial
+        full <- lm(dy ~ ., data = x)
+      } else {
+        ecm <- lm(dy ~ ., data = x)
+      }
+    }
+  } else if (criterion == "rmse"){
+    fullrmse <- partialrmse <- sqrt(mean(full$residuals^2))
+    while (partialrmse <= fullrmse) {
+      fullrmse <- sqrt(mean(full$residuals^2))
+      todrop <- which.max(summary(full)$coef[-1, 4])
+      newx <- x[which(!names(x) %in% names(todrop))]
+      partial <- lm(dy ~ ., data = newx)
+      partialrmse <- sqrt(mean(partial$residuals^2))
+      if (partialrmse <= fullrmse) {
         x <- newx
         ecm <- partial
         full <- lm(dy ~ ., data = x)

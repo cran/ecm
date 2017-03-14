@@ -13,7 +13,7 @@ ecmback(y, xeq, xtr, criterion = "AIC")
 
 \item{xtr}{The variables to be used in the transient term of the error correction model}
 
-\item{criterion}{Whether AIC (default), BIC, or adjustedR2 should be used to select variables}
+\item{criterion}{Whether AIC (default), BIC, adjustedR2, or rmse should be used to select variables}
 }
 \value{
 an lm object representing an error correction model using backwards selection
@@ -45,4 +45,3 @@ print(modelback)
 \seealso{
 \code{lm}
 }
-

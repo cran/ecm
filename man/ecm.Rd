@@ -56,4 +56,3 @@ model2 <- ecm(trn$Wilshire5000, xeq, xtr)
 \seealso{
 \code{lm}
 }
-

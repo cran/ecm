@@ -4,10 +4,10 @@
 \alias{ecmpredict}
 \title{Predict using an ecm object}
 \usage{
-ecmpredict(ecm, newdata, init)
+ecmpredict(model, newdata, init)
 }
 \arguments{
-\item{ecm}{ecm object used to make predictions}
+\item{model}{ecm object used to make predictions}
 
 \item{newdata}{Data frame to on which to predict}
 
@@ -20,7 +20,7 @@ Numeric predictions on new data based ecm object
 Takes an ecm object and uses it to predict based on new data.
 }
 \details{
-Since error correction models only model the change in the target variable, an initial value must be specified.
+Since error correction models only model the change in the target variable, an initial value must be specified. Additionally, the 'newdata' parameter should have at least 3 rows of data.
 }
 \examples{
 data(Wilshire)
@@ -37,4 +37,3 @@ tst <- Wilshire[Wilshire$date>='2014-12-01',]
 tst$model1Pred <- ecmpredict(model1, tst, tst$Wilshire5000[1])
 
 }
-

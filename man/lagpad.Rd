@@ -17,4 +17,3 @@ The lagged vector with NA's in missing values
 \description{
 Create a vector of the lag of a variable and fill missing values with NA's.
 }
-
