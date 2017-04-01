@@ -4,7 +4,7 @@
 \alias{ecmback}
 \title{Backwards selection to build an error correction model}
 \usage{
-ecmback(y, xeq, xtr, criterion = "AIC")
+ecmback(y, xeq, xtr, includeIntercept = T, criterion = "AIC")
 }
 \arguments{
 \item{y}{The target variable}
@@ -13,7 +13,9 @@ ecmback(y, xeq, xtr, criterion = "AIC")
 
 \item{xtr}{The variables to be used in the transient term of the error correction model}
 
-\item{criterion}{Whether AIC (default), BIC, adjustedR2, or rmse should be used to select variables}
+\item{includeIntercept}{Boolean whether the y-intercept should be included}
+
+\item{criterion}{Whether AIC (default), BIC, or adjustedR2 should be used to select variables}
 }
 \value{
 an lm object representing an error correction model using backwards selection
@@ -36,7 +38,7 @@ trn <- Wilshire[Wilshire$date<='2014-12-01',]
 
 #Use backwards selection to choose which predictors are needed 
 xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-modelback <- ecmback(trn$Wilshire5000, xeq, xtr, criterion = 'AIC')
+modelback <- ecmback(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE, criterion = 'AIC')
 print(modelback)
 #Backwards selection chose CorpProfits in the equilibrium term, 
 #CorpProfits and UnempRate in the transient term.

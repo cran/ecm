@@ -4,7 +4,7 @@
 \alias{ecm}
 \title{Build an error correction model}
 \usage{
-ecm(y, xeq, xtr)
+ecm(y, xeq, xtr, includeIntercept = TRUE)
 }
 \arguments{
 \item{y}{The target variable}
@@ -12,6 +12,8 @@ ecm(y, xeq, xtr)
 \item{xeq}{The variables to be used in the equilibrium term of the error correction model}
 
 \item{xtr}{The variables to be used in the transient term of the error correction model}
+
+\item{includeIntercept}{Boolean whether the y-intercept should be included}
 }
 \value{
 an lm object representing an error correction model
@@ -44,13 +46,13 @@ trn <- Wilshire[Wilshire$date<='2014-12-01',]
 
 #Assume all predictors are needed in the equilibrium and transient terms of ecm
 xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-model1 <- ecm(trn$Wilshire5000, xeq, xtr)
+model1 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
 
 #Assume CorpProfits and FedFundsRate are in the equilibrium term, 
 #UnempRate has only transient impacts
 xeq <- trn[c('CorpProfits', 'FedFundsRate')]
 xtr <- trn['UnempRate']
-model2 <- ecm(trn$Wilshire5000, xeq, xtr)
+model2 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
 
 }
 \seealso{

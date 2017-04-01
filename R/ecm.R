@@ -5,6 +5,7 @@
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
+#'@param includeIntercept Boolean whether the y-intercept should be included
 #'@return an lm object representing an error correction model
 #'@details
 #'The general format of an ECM is \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (\alpha_{1}x_{1,t-1} +...+ \alpha_{i}x_{i,t-1})).}
@@ -30,22 +31,22 @@
 #'
 #'#Assume all predictors are needed in the equilibrium and transient terms of ecm
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-#'model1 <- ecm(trn$Wilshire5000, xeq, xtr)
+#'model1 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
 #'
 #'#Assume CorpProfits and FedFundsRate are in the equilibrium term, 
 #'#UnempRate has only transient impacts
 #'xeq <- trn[c('CorpProfits', 'FedFundsRate')]
 #'xtr <- trn['UnempRate']
-#'model2 <- ecm(trn$Wilshire5000, xeq, xtr)
+#'model2 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
 #'
 #'@export
 #'@importFrom stats lm
-ecm <- function (y, xeq, xtr) {
+ecm <- function (y, xeq, xtr, includeIntercept = TRUE) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
-    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
+    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
   
-  if(class(xtr) != "data.frame" | class(xeq) != "data.frame") {
+  if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
     stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
   }
   
@@ -64,7 +65,12 @@ ecm <- function (y, xeq, xtr) {
   x <- cbind(x, yLag1)
   names(x) <- c(xtrnames, xeqnames, "yLag1")
   
-  ecm <- lm(dy ~ ., data = x)
+  if (includeIntercept){
+    ecm <- lm(dy ~ ., data = x)
+  } else {
+    ecm <- lm(dy ~ . - 1, data = x)
+  }
+  
   return(ecm)
 }
 
