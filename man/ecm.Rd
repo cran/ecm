@@ -4,7 +4,7 @@
 \alias{ecm}
 \title{Build an error correction model}
 \usage{
-ecm(y, xeq, xtr, includeIntercept = TRUE)
+ecm(y, xeq, xtr, includeIntercept = TRUE, ...)
 }
 \arguments{
 \item{y}{The target variable}
@@ -14,6 +14,8 @@ ecm(y, xeq, xtr, includeIntercept = TRUE)
 \item{xtr}{The variables to be used in the transient term of the error correction model}
 
 \item{includeIntercept}{Boolean whether the y-intercept should be included}
+
+\item{...}{Additional arguments to be passed to the 'lm' function (careful in that the these may need to be modified for ecm or may not be appropriate!)}
 }
 \value{
 an lm object representing an error correction model
