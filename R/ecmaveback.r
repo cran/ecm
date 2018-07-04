@@ -1,4 +1,4 @@
-#'Backwards selection to build an error correction model
+#'Backwards selection using averaged error correction model
 #'
 #'Much like the ecm function, this builds an error correction model.
 #'However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, or highest adjusted R-squared, rather than using all predictors.
@@ -7,7 +7,10 @@
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param includeIntercept Boolean whether the y-intercept should be included
+#'@param k The number of models or data partitions desired
 #'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables
+#'@param method Whether to split data by folds ("fold") or by bootstrapping ("boot")
+#'@param seed Seed for reproducibility (only needed if method is "boot")
 #'@param weights Optional vector of weights to be passed to the fitting process
 #'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
 #'@return an lm object representing an error correction model using backwards selection
@@ -24,18 +27,18 @@
 #'
 #'#Use backwards selection to choose which predictors are needed 
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-#'modelback <- ecmback(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE, criterion = 'AIC')
-#'print(modelback)
-#'#Backwards selection chose CorpProfits in the equilibrium term, 
-#'#CorpProfits and UnempRate in the transient term.
+#'modelaveback <- ecmaveback(trn$Wilshire5000, xeq, xtr, k = 5)
+#'print(modelaveback)
+#'#Backwards selection of averaged ECM models chose only CorpProfits in the equilibrium and 
+#'#transient terms.
 #'
 #'@export
-#'@importFrom stats lm complete.cases step
-ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weights = NULL, ...) {
+#'@importFrom stats lm complete.cases AIC as.formula drop1
+ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k, method = 'boot', seed = 5, weights = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
-
+  
   xeqnames <- names(xeq)
   xeqnames <- paste0(xeqnames, "Lag1")
   xeq <- as.data.frame(xeq)
@@ -53,21 +56,33 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
   x$dy <- diff(y, 1)
   
   if (includeIntercept){
-    full <- lm(dy ~ ., data = x, ...)
-    null <- lm(dy ~ yLag1, data = x)
+    formula <- "dy ~ ."
+    full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
   } else {
-    full <- lm(dy ~ .-1, data = x, ...)
-    null <- lm(dy ~ yLag1 - 1, data = x)
+    formula <- "dy ~ . - 1"
+    full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
   }
-    
+  
   if (criterion == "AIC" | criterion == "BIC") {
     if (criterion == "AIC") {
-      kIC = 2
+      kIC <- 2
     } else if (criterion == "BIC") {
-      kIC = log(nrow(x))
+      kIC <- log(nrow(x))
     }
-    ecm <- step(full, data = x, scope = list(upper = full, lower = null), direction = "backward", k = kIC, trace = 0)
-  } else if (criterion == "adjustedR2") {
+    
+    fullAIC <- partialAIC <- AIC(full, k=kIC)
+    while (partialAIC <= fullAIC){
+      todrop <- rownames(drop1(full, k=kIC))[-grep('none|yLag1', rownames(drop1(full, k=kIC)))][which.min(drop1(full, k=kIC)$AIC[-grep('none|yLag1', rownames(drop1(full, k=kIC)))])]
+      formula <- paste0(formula, ' - ', todrop)
+      full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
+      partialAIC <- AIC(full)
+      if (partialAIC < fullAIC & length(rownames(drop1(full))) > 2){
+        fullAIC <- partialAIC
+      } else {
+        ecm <- full
+      }
+    }
+  } else if (criterion == 'adjustedR2'){
     fullAdjR2 <- partialAdjR2 <- summary(full)$adj.r.sq
     while (partialAdjR2 >= fullAdjR2) {
       fullAdjR2 <- summary(full)$adj.r.sq
@@ -77,22 +92,12 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
         todrop <- which.max(summary(full)$coef[, 4])
       }
       newx <- x[which(!names(x) %in% names(todrop))]
-      partial <- lm(dy ~ ., data = newx)
-      partialAdjR2 <- summary(partial)$adj.r.sq
+      full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
+      partialAdjR2 <- summary(full)$adj.r.sq
       if (partialAdjR2 >= fullAdjR2) {
         x <- newx
-        ecm <- partial
-        if (includeIntercept){
-          full <- lm(dy ~ ., data = x, ...)
-        } else {
-          full <- lm(dy ~ . - 1, data = x, ...)
-        }
       } else {
-        if (includeIntercept){
-          ecm <- lm(dy ~ ., data = x, ...)
-        } else {
-          ecm <- lm(dy ~ . - 1, data = x, ...)
-        }
+        ecm <- full
       }
     }
   }

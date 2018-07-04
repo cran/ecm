@@ -6,6 +6,7 @@
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param includeIntercept Boolean whether the y-intercept should be included
+#'@param weights Optional vector of weights to be passed to the fitting process
 #'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
 #'@return an lm object representing an error correction model
 #'@details
@@ -27,8 +28,8 @@
 #'#Federal Reserve funds rate, and unemployment rate
 #'data(Wilshire)
 #'
-#'#Use 2014-12-01 and earlier data to build models
-#'trn <- Wilshire[Wilshire$date<='2014-12-01',]
+#'#Use 2015-12-01 and earlier data to build models
+#'trn <- Wilshire[Wilshire$date<='2015-12-01',]
 #'
 #'#Assume all predictors are needed in the equilibrium and transient terms of ecm
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
@@ -42,7 +43,7 @@
 #'
 #'@export
 #'@importFrom stats lm
-ecm <- function (y, xeq, xtr, includeIntercept = TRUE, ...) {
+ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
@@ -59,17 +60,16 @@ ecm <- function (y, xeq, xtr, includeIntercept = TRUE, ...) {
   xtrnames <- paste0("delta", xtrnames)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
   
-  dy <- diff(y, 1)
-  
   yLag1 <- y[1:(length(y) - 1)]
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
   x <- cbind(x, yLag1)
   names(x) <- c(xtrnames, xeqnames, "yLag1")
+  x$dy <- diff(y, 1)
   
   if (includeIntercept){
-    ecm <- lm(dy ~ ., data = x, ...)
+    ecm <- lm(dy ~ ., data = x, weights = weights, ...)
   } else {
-    ecm <- lm(dy ~ . - 1, data = x, ...)
+    ecm <- lm(dy ~ . - 1, data = x, weights = weights, ...)
   }
   
   return(ecm)
