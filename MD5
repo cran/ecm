@@ -1,11 +1,11 @@
-7429f3d6cd325204263a2fc1f05c073b *DESCRIPTION
+3131fe3da662e9cf42af7967cb63b1a0 *DESCRIPTION
 7e349a9ae9ccb72923181afbdd839f31 *NAMESPACE
 2f5f3094c2c636ad1484020ff004576d *R/data.R
 f57f0b3471bcc443e88ec4a60bb5d210 *R/durbinH.r
 c847551a0357dbbab01a297873e4db48 *R/ecm.R
 ebf1cc645fa6ab438df208f53f8eda93 *R/ecmave.R
-88e77bfa6f9be828c2623b238e6f8e5d *R/ecmaveback.r
-666aaa15da956896dd8f97ef34922e95 *R/ecmback.r
+93ab6d5eced23f5100c06fcf8023716c *R/ecmaveback.r
+ec0de4de1683182a0356686e0365c944 *R/ecmback.r
 a9742c8a2857fce85b5eff9faa48e012 *R/ecmpredict.r
 ba20ff51da970b6f4e445732a2ff1815 *R/lagpad.r
 01906e23269f50f4778bd0dcb04b836b *R/lmave.R
@@ -14,9 +14,9 @@ a01a4eacd2348223e9909dd4647c13a5 *data/Wilshire.RData
 3abd8a67e17388866388aa0637d103c0 *man/Wilshire.Rd
 5e1cbd18f908e612b54da70d1972a81c *man/durbinH.Rd
 6469dc4e231d37e02316a90b3cbed306 *man/ecm.Rd
-55ad5c4d1c49f96f811c22139045c76c *man/ecmave.Rd
+7e29555cbe10f737f30f57b35d9ffc89 *man/ecmave.Rd
 ca7feba8d6770cd273aa1943d35d2013 *man/ecmaveback.Rd
 a3bc405f981b57478b3b57aa21f7b29c *man/ecmback.Rd
 21b2311ba8b57110e1f2461569e4a0d2 *man/ecmpredict.Rd
 6f30607dd9f7c95a06b61243a06a5ea1 *man/lagpad.Rd
-37924042549ef88785c6863c5eca8e3c *man/lmave.Rd
+2e588d5b42f9ee0e9c8a542cb77b1934 *man/lmave.Rd
