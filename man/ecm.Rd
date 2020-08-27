@@ -4,7 +4,7 @@
 \alias{ecm}
 \title{Build an error correction model}
 \usage{
-ecm(y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...)
+ecm(y, xeq, xtr, lags = 1, includeIntercept = TRUE, weights = NULL, ...)
 }
 \arguments{
 \item{y}{The target variable}
@@ -12,6 +12,8 @@ ecm(y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...)
 \item{xeq}{The variables to be used in the equilibrium term of the error correction model}
 
 \item{xtr}{The variables to be used in the transient term of the error correction model}
+
+\item{lags}{The number of lags to use}
 
 \item{includeIntercept}{Boolean whether the y-intercept should be included}
 
@@ -31,6 +33,8 @@ The general format of an ECM is \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{
 The ecm function here modifies the equation to the following: \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma y_{t-1} + \gamma_{1}x_{1,t-1} +...+ \gamma_{i}x_{i,t-1},}
 \deqn{where \gamma_{i} = -\gamma \alpha_{i},} 
 so it can be modeled as a simpler ordinary least squares (OLS) function using R's lm function.
+
+Ordinarily, the ECM uses lag=1 when differencing the transient term and lagging the equilibrium term, as specified in the equation above. However, the ecm function here gives the user the ability to specify a lag greater than 1. 
 
 Notice that an ECM models the change in the target variable (y). This means that the predictors will be lagged and differenced,
 and the model will be built on one observation less than what the user inputs for y, xeq, and xtr. If these arguments contain vectors with too few observations (eg. one single observation),

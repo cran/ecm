@@ -5,6 +5,7 @@
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
+#'@param lags The number of lags to use
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param weights Optional vector of weights to be passed to the fitting process
 #'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
@@ -14,6 +15,8 @@
 #'The ecm function here modifies the equation to the following: \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma y_{t-1} + \gamma_{1}x_{1,t-1} +...+ \gamma_{i}x_{i,t-1},}
 #'\deqn{where \gamma_{i} = -\gamma \alpha_{i},} 
 #'so it can be modeled as a simpler ordinary least squares (OLS) function using R's lm function.
+#'
+#'Ordinarily, the ECM uses lag=1 when differencing the transient term and lagging the equilibrium term, as specified in the equation above. However, the ecm function here gives the user the ability to specify a lag greater than 1. 
 #'
 #'Notice that an ECM models the change in the target variable (y). This means that the predictors will be lagged and differenced,
 #'and the model will be built on one observation less than what the user inputs for y, xeq, and xtr. If these arguments contain vectors with too few observations (eg. one single observation),
@@ -45,26 +48,26 @@
 #'
 #'@export
 #'@importFrom stats lm
-ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...) {
-  if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
-    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
+ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, ...) {
+  if (sum(grepl("^delta|Lag[0-9]$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
+    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag[0-9]'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
   
   if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
     stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
   }
   
-  xeqnames <- names(xeq)
-  xeqnames <- paste0(xeqnames, "Lag1")
-  if(ncol(xeq) > 1) {
-    xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ])
-  } else {
-    xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ]))
+  if (nrow(xeq) < (lags+1)) {
+    stop("Insufficient data for the lags specified.")
   }
-
+  
+  xeqnames <- names(xeq)
+  xeqnames <- paste0(xeqnames, paste0("Lag", as.character(lags)))
+  xeq <- data.frame(sapply(xeq, lagpad, lags))
+  
   xtrnames <- names(xtr)
   xtrnames <- paste0("delta", xtrnames)
-  xtr <- data.frame(apply(xtr, 2, diff, 1))
+  xtr <- data.frame(apply(xtr, 2, diff, lags))
   
   if (class(y)=='data.frame'){
     if (ncol(y) > 1){
@@ -72,12 +75,12 @@ ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...) {
     }
     y <- y[,1]
   }
-  yLag1 <- y[1:(length(y) - 1)]
+  yLag <- y[1:(length(y) - lags)]
   
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
-  x <- cbind(x, yLag1)
-  names(x) <- c(xtrnames, xeqnames, "yLag1")
-  x$dy <- diff(y, 1)
+  x <- cbind(x, yLag)
+  names(x) <- c(xtrnames, xeqnames, paste0("yLag", as.character(lags)))
+  x$dy <- diff(y, lags)
   
   if (includeIntercept){
     ecm <- lm(dy ~ ., data = x, weights = weights, ...)
