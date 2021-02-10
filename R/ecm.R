@@ -22,7 +22,7 @@
 #'and the model will be built on one observation less than what the user inputs for y, xeq, and xtr. If these arguments contain vectors with too few observations (eg. one single observation),
 #'the function will not work. Additionally, for the same reason, if using weights in the ecm function, the length of weights should be one less than the number of rows in xeq or xtr.
 #'
-#'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+#'When inputting a single variable for xeq or xtr in base R, it is important to input it in the format "xeq=df['col1']" so they inherit the class 'data.frame'. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function. You can load data via other R packages that store data in other formats, as long as those formats also inherit the 'data.frame' class.
 #'
 #'ECM models are used for time series data. This means the user may need to consider stationarity and/or cointegration before using the model.
 #'@seealso \code{lm}
@@ -53,8 +53,8 @@ ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, .
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag[0-9]'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
   
-  if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
-    stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
+  if (!inherits(xtr, "data.frame") | !inherits(xeq, "data.frame")) {
+    stop("xeq or xtr does not inherit class 'data.frame'. See details on how to input them as data frames.")
   }
   
   if (nrow(xeq) < (lags+1)) {
