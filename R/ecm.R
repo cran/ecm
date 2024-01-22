@@ -99,13 +99,23 @@ ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, linearFit
     x <- xtr
     xnames <- xtrnames
   } else if (is.null(xtr) & !is.null(xeq)){
-    x <- xeq[complete.cases(xeq), ]
+    x <- as.data.frame(xeq[complete.cases(xeq), ])
     xnames <- xeqnames
   }
   
-  x <- cbind(x, yLag)
+  x <- as.data.frame(cbind(x, yLag))
   names(x) <- c(xnames, paste0("yLag1"))
   x$dy <- diff(y)
+  
+  if (!is.null(weights)){
+    if (is.data.frame(weights)){
+      warning("weights is a data.frame, only the first column will be used")
+      weights <- weights[,1]
+    }
+    if (length(weights) > nrow(x)){
+      weights <- weights[(length(weights)-nrow(x)+1):length(weights)]
+    }
+  }
   
   if (linearFitter=='lm'){
     if (includeIntercept){
